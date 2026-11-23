@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cybersecurity Log Analyzer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0b1120;
+    color: #e2e8f0;
+}
+
+header {
+    background: #111c30;
+    padding: 22px;
+    text-align: center;
+    border-bottom: 2px solid #2563eb;
+}
+
+header h1 {
+    color: #38bdf8;
+    margin: 0;
+}
+
+header p {
+    color: #94a3b8;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+.card {
+    background: #17243a;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #263750;
+}
+
+.card h3 {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+.section {
+    background: #17243a;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 12px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    background: #0b1120;
+    color: white;
+    border: 1px solid #475569;
+    border-radius: 8px;
+    resize: vertical;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin: 8px 5px 0 0;
+    border-radius: 7px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #334155;
+    text-align: left;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+th {
+    color: #38bdf8;
+}
+
+.HIGH, .ERROR {
+    color: #fb7185;
+    font-weight: bold;
+}
+
+.WARNING {
+    color: #fbbf24;
+    font-weight: bold;
+}
+
+.INFO, .SUCCESS {
+    color: #4ade80;
+}
+
+.status {
+    color: #94a3b8;
+    margin-top: 12px;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+}
+
+@media(max-width: 500px) {
+    .container {
+        padding: 12px;
+    }
+    .card {
+        padding: 14px;
+    }
+    th, td {
+        font-size: 11px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛡️ Cybersecurity Log Analyzer</h1>
+    <p>Security Event Monitoring Dashboard</p>
+</header>
+
+<div class="container">
+
+    <h2>Dashboard Overview</h2>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Total Logs</h3>
+            <div class="number" id="total">0</div>
+        </div>
+
+        <div class="card">
+            <h3>High Risk Events</h3>
+            <div class="number" id="high">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Warnings</h3>
+            <div class="number" id="warnings">0</div>
+        </div>
+
+        <div class="card">
+            <h3>Successful Events</h3>
+            <div class="number" id="success">0</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Analyze Security Logs</h2>
+
+        <p>Enter sample security logs below:</p>
+
+        <textarea id="logs" placeholder="Enter your log entries here..."></textarea>
+
+        <br>
+
+        <button onclick="analyzeLogs()">Analyze Logs</button>
+        <button onclick="loadSample()">Load Sample Logs</button>
+        <button onclick="clearLogs()">Clear</button>
+
+        <p class="status" id="status">
+            Waiting for log entries...
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Analysis Results</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Log Entry</th>
+                    <th>Category</th>
+                </tr>
+            </thead>
+
+            <tbody id="results">
+                <tr>
+                    <td colspan="2">No logs analyzed yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<footer>
+    Cybersecurity Log Analyzer | Capstone Project
+    <br><br>
+    Educational demonstration using sample logs.
+</footer>
+
+<script>
+const sampleLogs = [
+    "INFO: System started successfully",
+    "SUCCESS: User login successful",
+    "WARNING: Multiple login attempts detected",
+    "ERROR: Failed authentication",
+    "HIGH: Suspicious activity detected",
+    "INFO: Security update completed",
+    "ERROR: Unauthorized access attempt",
+    "SUCCESS: Backup completed"
+];
+
+function getCategory(log) {
+    const text = log.toUpperCase();
+
+    if (text.includes("HIGH") ||
+        text.includes("CRITICAL") ||
+        text.includes("SUSPICIOUS") ||
+        text.includes("UNAUTHORIZED")) {
+        return "HIGH";
+    }
+
+    if (text.includes("WARNING") ||
+        text.includes("FAILED")) {
+        return "WARNING";
+    }
+
+    if (text.includes("ERROR")) {
+        return "ERROR";
+    }
+
+    if (text.includes("SUCCESS")) {
+        return "SUCCESS";
+    }
+
+    return "INFO";
+}
+
+function analyzeLogs() {
+    const input = document.getElementById("logs").value;
+
+    const entries = input.split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+    if (entries.length === 0) {
+        document.getElementById("status").textContent =
+            "Please enter some log entries first.";
+        return;
+    }
+
+    let high = 0;
+    let warnings = 0;
+    let success = 0;
+
+    const results = document.getElementById("results");
+    results.innerHTML = "";
+
+    entries.forEach(log => {
+        const category = getCategory(log);
+
+        if (category === "HIGH" || category === "ERROR") {
+            high++;
+        }
+
+        if (category === "WARNING") {
+            warnings++;
+        }
+
+        if (category === "SUCCESS") {
+            success++;
+        }
+
+        const row = document.createElement("tr");
+        const entryCell = document.createElement("td");
+        const categoryCell = document.createElement("td");
+
+        entryCell.textContent = log;
+        categoryCell.textContent = category;
+        categoryCell.className = category;
+
+        row.appendChild(entryCell);
+        row.appendChild(categoryCell);
+        results.appendChild(row);
+    });
+
+    document.getElementById("total").textContent =
+        entries.length;
+
+    document.getElementById("high").textContent =
+        high;
+
+    document.getElementById("warnings").textContent =
+        warnings;
+
+    document.getElementById("success").textContent =
+        success;
+
+    document.getElementById("status").textContent =
+        "Analysis completed successfully!";
+}
+
+function loadSample() {
+    document.getElementById("logs").value =
+        sampleLogs.join("\n");
+
+    analyzeLogs();
+}
+
+function clearLogs() {
+    document.getElementById("logs").value = "";
+
+    document.getElementById("total").textContent = "0";
+    document.getElementById("high").textContent = "0";
+    document.getElementById("warnings").textContent = "0";
+    document.getElementById("success").textContent = "0";
+
+    document.getElementById("results").innerHTML =
+        '<tr><td colspan="2">No logs analyzed yet.</td></tr>';
+
+    document.getElementById("status").textContent =
+        "Waiting for log entries...";
+}
+</script>
+
+</body>
+</html>
